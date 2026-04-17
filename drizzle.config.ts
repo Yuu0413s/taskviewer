@@ -1,18 +1,12 @@
-import "dotenv/config";
+import { config } from "dotenv";
+config({ path: ".env.local" });
 import type { Config } from "drizzle-kit";
-
-const isLocal = !process.env.TURSO_DATABASE_URL?.startsWith("libsql://");
 
 export default {
   schema: "./src/lib/db/schema.ts",
   out: "./drizzle",
-  dialect: isLocal ? "sqlite" : "turso",
-  dbCredentials: isLocal
-    ? {
-        url: process.env.TURSO_DATABASE_URL || "file:./local.db",
-      }
-    : {
-        url: process.env.TURSO_DATABASE_URL!,
-        authToken: process.env.TURSO_AUTH_TOKEN,
-      },
+  dialect: "postgresql",
+  dbCredentials: {
+    url: process.env.POSTGRES_URL!,
+  },
 } satisfies Config;

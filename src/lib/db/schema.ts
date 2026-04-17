@@ -1,20 +1,20 @@
-import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
+import { pgTable, text, integer, timestamp, boolean } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 
 // ==================== Auth.js 標準テーブル ====================
 
-export const users = sqliteTable("users", {
+export const users = pgTable("users", {
   id: text("id").primaryKey(),
   name: text("name"),
   email: text("email").unique(),
-  emailVerified: integer("email_verified", { mode: "timestamp" }),
+  emailVerified: timestamp("email_verified", { mode: "date" }),
   image: text("image"),
-  passwordHash: text("password_hash"), // メール認証用
-  createdAt: integer("created_at", { mode: "timestamp" }).$defaultFn(() => new Date()),
-  updatedAt: integer("updated_at", { mode: "timestamp" }).$defaultFn(() => new Date()),
+  passwordHash: text("password_hash"),
+  createdAt: timestamp("created_at", { mode: "date" }).$defaultFn(() => new Date()),
+  updatedAt: timestamp("updated_at", { mode: "date" }).$defaultFn(() => new Date()),
 });
 
-export const accounts = sqliteTable("accounts", {
+export const accounts = pgTable("accounts", {
   id: text("id").primaryKey(),
   userId: text("user_id")
     .notNull()
@@ -31,33 +31,33 @@ export const accounts = sqliteTable("accounts", {
   sessionState: text("session_state"),
 });
 
-export const sessions = sqliteTable("sessions", {
+export const sessions = pgTable("sessions", {
   id: text("id").primaryKey(),
   sessionToken: text("session_token").unique().notNull(),
   userId: text("user_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
-  expires: integer("expires", { mode: "timestamp" }).notNull(),
+  expires: timestamp("expires", { mode: "date" }).notNull(),
 });
 
-export const verificationTokens = sqliteTable("verification_tokens", {
+export const verificationTokens = pgTable("verification_tokens", {
   identifier: text("identifier").notNull(),
   token: text("token").notNull(),
-  expires: integer("expires", { mode: "timestamp" }).notNull(),
+  expires: timestamp("expires", { mode: "date" }).notNull(),
 });
 
 // ==================== アプリケーション固有テーブル ====================
 
-export const taskTypes = sqliteTable("task_types", {
+export const taskTypes = pgTable("task_types", {
   id: text("id").primaryKey(),
-  userId: text("user_id").references(() => users.id, { onDelete: "cascade" }), // nullなら共通
+  userId: text("user_id").references(() => users.id, { onDelete: "cascade" }),
   name: text("name").notNull(),
   color: text("color").notNull().default("#3b82f6"),
-  isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
-  createdAt: integer("created_at", { mode: "timestamp" }).$defaultFn(() => new Date()),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at", { mode: "date" }).$defaultFn(() => new Date()),
 });
 
-export const timeEntries = sqliteTable("time_entries", {
+export const timeEntries = pgTable("time_entries", {
   id: text("id").primaryKey(),
   userId: text("user_id")
     .notNull()
@@ -65,16 +65,16 @@ export const timeEntries = sqliteTable("time_entries", {
   taskTypeId: text("task_type_id")
     .notNull()
     .references(() => taskTypes.id),
-  date: text("date").notNull(), // YYYY-MM-DD
-  startedAt: integer("started_at", { mode: "timestamp" }).notNull(),
-  endedAt: integer("ended_at", { mode: "timestamp" }),
+  date: text("date").notNull(),
+  startedAt: timestamp("started_at", { mode: "date" }).notNull(),
+  endedAt: timestamp("ended_at", { mode: "date" }),
   durationMinutes: integer("duration_minutes"),
   status: text("status", { enum: ["working", "on_break", "completed"] })
     .notNull()
     .default("working"),
   memo: text("memo"),
-  createdAt: integer("created_at", { mode: "timestamp" }).$defaultFn(() => new Date()),
-  updatedAt: integer("updated_at", { mode: "timestamp" }).$defaultFn(() => new Date()),
+  createdAt: timestamp("created_at", { mode: "date" }).$defaultFn(() => new Date()),
+  updatedAt: timestamp("updated_at", { mode: "date" }).$defaultFn(() => new Date()),
 });
 
 // ==================== リレーション ====================

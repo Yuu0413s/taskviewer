@@ -1,4 +1,5 @@
-import "dotenv/config";
+import { config } from "dotenv";
+config({ path: ".env.local" });
 import { db, taskTypes } from "./index";
 import { randomUUID } from "crypto";
 
