@@ -13,7 +13,6 @@ export function TimeTracker() {
   const [currentEntry, setCurrentEntry] = useState<TimeEntryWithCategory | null>(null);
   const [selectedCategory, setSelectedCategory] = useState("");
   const [taskName, setTaskName] = useState("");
-  const [plannedStartAt, setPlannedStartAt] = useState("");
   const [plannedDurationMinutes, setPlannedDurationMinutes] = useState("");
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
@@ -54,10 +53,6 @@ export function TimeTracker() {
     try {
       const body: Record<string, unknown> = { categoryId: selectedCategory };
       if (taskName.trim()) body.name = taskName.trim();
-      if (plannedStartAt) {
-        const today = new Date().toISOString().split("T")[0];
-        body.plannedStartAt = new Date(`${today}T${plannedStartAt}:00`).toISOString();
-      }
       if (plannedDurationMinutes) {
         body.plannedDurationMinutes = parseInt(plannedDurationMinutes, 10);
       }
@@ -72,7 +67,6 @@ export function TimeTracker() {
         const data = await res.json();
         setCurrentEntry(data);
         setTaskName("");
-        setPlannedStartAt("");
         setPlannedDurationMinutes("");
       } else {
         const errBody = await res.text();
@@ -194,31 +188,18 @@ export function TimeTracker() {
                   disabled={false}
                 />
               </div>
-              <div className="flex gap-3">
-                <div className="flex-1">
-                  <label className="mb-1 block text-xs font-medium text-gray-600">
-                    計画開始時刻
-                  </label>
-                  <input
-                    type="time"
-                    value={plannedStartAt}
-                    onChange={(e) => setPlannedStartAt(e.target.value)}
-                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
-                  />
-                </div>
-                <div className="flex-1">
-                  <label className="mb-1 block text-xs font-medium text-gray-600">
-                    計画時間（分）
-                  </label>
-                  <input
-                    type="number"
-                    value={plannedDurationMinutes}
-                    onChange={(e) => setPlannedDurationMinutes(e.target.value)}
-                    placeholder="60"
-                    min="1"
-                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
-                  />
-                </div>
+              <div>
+                <label className="mb-1 block text-xs font-medium text-gray-600">
+                  計画時間（分）
+                </label>
+                <input
+                  type="number"
+                  value={plannedDurationMinutes}
+                  onChange={(e) => setPlannedDurationMinutes(e.target.value)}
+                  placeholder="60"
+                  min="1"
+                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                />
               </div>
             </div>
           ) : (
