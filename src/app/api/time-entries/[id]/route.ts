@@ -65,7 +65,7 @@ export async function PATCH(
     const updatedEntry = await db.query.timeEntries.findFirst({
       where: eq(timeEntries.id, id),
       with: {
-        taskType: true,
+        category: true,
       },
     });
 

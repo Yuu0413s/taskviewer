@@ -21,7 +21,7 @@ export async function GET() {
         )
       ),
       with: {
-        taskType: true,
+        category: true,
       },
     });
 

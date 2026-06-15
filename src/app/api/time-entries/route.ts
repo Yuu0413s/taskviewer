@@ -26,7 +26,7 @@ export async function GET(request: Request) {
       where: and(...conditions),
       orderBy: [desc(timeEntries.startedAt)],
       with: {
-        taskType: true,
+        category: true,
       },
     });
 
@@ -49,11 +49,11 @@ export async function POST(request: Request) {
   }
 
   try {
-    const { taskTypeId, memo } = await request.json();
+    const { categoryId, name, memo, plannedStartAt, plannedDurationMinutes } = await request.json();
 
-    if (!taskTypeId) {
+    if (!categoryId) {
       return NextResponse.json(
-        { error: "タスク種類は必須です" },
+        { error: "カテゴリは必須です" },
         { status: 400 }
       );
     }
@@ -80,8 +80,11 @@ export async function POST(request: Request) {
     await db.insert(timeEntries).values({
       id,
       userId: session.user.id,
-      taskTypeId,
+      categoryId,
+      name: name ?? null,
       date,
+      plannedStartAt: plannedStartAt ? new Date(plannedStartAt) : null,
+      plannedDurationMinutes: plannedDurationMinutes ?? null,
       startedAt: now,
       status: "working",
       memo,
@@ -90,7 +93,7 @@ export async function POST(request: Request) {
     const newEntry = await db.query.timeEntries.findFirst({
       where: eq(timeEntries.id, id),
       with: {
-        taskType: true,
+        category: true,
       },
     });
 
