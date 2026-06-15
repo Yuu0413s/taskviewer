@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { TaskType } from "@/lib/db/schema";
+import { Category } from "@/lib/db/schema";
 
 interface TaskTypeSelectorProps {
   value: string;
@@ -14,29 +14,29 @@ export function TaskTypeSelector({
   onChange,
   disabled,
 }: TaskTypeSelectorProps) {
-  const [taskTypes, setTaskTypes] = useState<TaskType[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchTaskTypes = async () => {
+    const fetchCategories = async () => {
       try {
         const res = await fetch("/api/task-types");
         if (res.ok) {
           const data = await res.json();
-          setTaskTypes(data);
-          // 初期値がない場合、最初のタスク種類を選択
+          setCategories(data);
+          // 初期値がない場合、最初のカテゴリを選択
           if (!value && data.length > 0) {
             onChange(data[0].id);
           }
         }
       } catch (error) {
-        console.error("Failed to fetch task types:", error);
+        console.error("Failed to fetch categories:", error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchTaskTypes();
+    fetchCategories();
   }, [value, onChange]);
 
   if (loading) {
@@ -45,10 +45,10 @@ export function TaskTypeSelector({
     );
   }
 
-  if (taskTypes.length === 0) {
+  if (categories.length === 0) {
     return (
       <p className="text-sm text-gray-500">
-        タスク種類がありません
+        カテゴリがありません
       </p>
     );
   }
@@ -60,9 +60,9 @@ export function TaskTypeSelector({
       disabled={disabled}
       className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-100"
     >
-      {taskTypes.map((type) => (
-        <option key={type.id} value={type.id}>
-          {type.name}
+      {categories.map((category) => (
+        <option key={category.id} value={category.id}>
+          {category.name}
         </option>
       ))}
     </select>

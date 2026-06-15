@@ -1,12 +1,12 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { TimeEntryWithTaskType } from "@/lib/db/schema";
+import { TimeEntryWithCategory } from "@/lib/db/schema";
 
 interface SummaryItem {
-  taskTypeId: string;
-  taskTypeName: string;
-  taskTypeColor: string;
+  categoryId: string;
+  categoryName: string;
+  categoryColor: string;
   totalMinutes: number;
 }
 
@@ -15,7 +15,7 @@ interface TodaySummaryProps {
 }
 
 export function TodaySummary({ refreshTrigger }: TodaySummaryProps) {
-  const [entries, setEntries] = useState<TimeEntryWithTaskType[]>([]);
+  const [entries, setEntries] = useState<TimeEntryWithCategory[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchEntries = useCallback(async () => {
@@ -42,14 +42,14 @@ export function TodaySummary({ refreshTrigger }: TodaySummaryProps) {
 
     entries.forEach((entry) => {
       if (entry.status === "completed" && entry.durationMinutes) {
-        const existing = summaryMap.get(entry.taskTypeId);
+        const existing = summaryMap.get(entry.categoryId);
         if (existing) {
           existing.totalMinutes += entry.durationMinutes;
         } else {
-          summaryMap.set(entry.taskTypeId, {
-            taskTypeId: entry.taskTypeId,
-            taskTypeName: entry.taskType?.name || "不明",
-            taskTypeColor: entry.taskType?.color || "#3b82f6",
+          summaryMap.set(entry.categoryId, {
+            categoryId: entry.categoryId,
+            categoryName: entry.category?.name || "不明",
+            categoryColor: entry.category?.color || "#3b82f6",
             totalMinutes: entry.durationMinutes,
           });
         }
@@ -93,13 +93,13 @@ export function TodaySummary({ refreshTrigger }: TodaySummaryProps) {
       ) : (
         <div className="space-y-2">
           {summary.map((item) => (
-            <div key={item.taskTypeId} className="flex items-center gap-2">
+            <div key={item.categoryId} className="flex items-center gap-2">
               <div
                 className="h-3 w-3 rounded-full"
-                style={{ backgroundColor: item.taskTypeColor }}
+                style={{ backgroundColor: item.categoryColor }}
               />
               <span className="flex-1 text-sm text-gray-700">
-                {item.taskTypeName}
+                {item.categoryName}
               </span>
               <span className="text-sm font-medium text-gray-900">
                 {formatDuration(item.totalMinutes)}

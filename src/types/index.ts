@@ -22,8 +22,8 @@ declare module "@auth/core/jwt" {
 export type TimeEntryStatus = "working" | "on_break" | "completed";
 
 export interface TimeEntrySummary {
-  taskTypeId: string;
-  taskTypeName: string;
-  taskTypeColor: string;
+  categoryId: string;
+  categoryName: string;
+  categoryColor: string;
   totalMinutes: number;
 }

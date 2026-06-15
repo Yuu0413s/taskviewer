@@ -5,13 +5,13 @@ import { Timer } from "./Timer";
 import { ControlButtons } from "./ControlButtons";
 import { TaskTypeSelector } from "./TaskTypeSelector";
 import { TodaySummary } from "./TodaySummary";
-import { TimeEntryWithTaskType } from "@/lib/db/schema";
+import { TimeEntryWithCategory } from "@/lib/db/schema";
 
 type Status = "idle" | "working" | "on_break" | "completed";
 
 export function TimeTracker() {
-  const [currentEntry, setCurrentEntry] = useState<TimeEntryWithTaskType | null>(null);
-  const [selectedTaskType, setSelectedTaskType] = useState("");
+  const [currentEntry, setCurrentEntry] = useState<TimeEntryWithCategory | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState("");
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
@@ -22,8 +22,8 @@ export function TimeTracker() {
       if (res.ok) {
         const data = await res.json();
         setCurrentEntry(data);
-        if (data?.taskTypeId) {
-          setSelectedTaskType(data.taskTypeId);
+        if (data?.categoryId) {
+          setSelectedCategory(data.categoryId);
         }
       }
     } catch (error) {
@@ -43,14 +43,14 @@ export function TimeTracker() {
   };
 
   const handleStart = async () => {
-    if (!selectedTaskType) return;
+    if (!selectedCategory) return;
 
     setLoading(true);
     try {
       const res = await fetch("/api/time-entries", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ taskTypeId: selectedTaskType }),
+        body: JSON.stringify({ categoryId: selectedCategory }),
       });
 
       if (res.ok) {
@@ -151,8 +151,8 @@ export function TimeTracker() {
 
           <div className="mx-auto max-w-xs">
             <TaskTypeSelector
-              value={selectedTaskType}
-              onChange={setSelectedTaskType}
+              value={selectedCategory}
+              onChange={setSelectedCategory}
               disabled={status !== "idle"}
             />
           </div>
