@@ -50,7 +50,7 @@ export const verificationTokens = pgTable("verification_tokens", {
 
 // ==================== アプリケーション固有テーブル ====================
 
-export const taskTypes = pgTable("task_types", {
+export const categories = pgTable("categories", {
   id: text("id").primaryKey(),
   userId: text("user_id").references(() => users.id, { onDelete: "cascade" }),
   name: text("name").notNull(),
@@ -64,10 +64,13 @@ export const timeEntries = pgTable("time_entries", {
   userId: text("user_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
-  taskTypeId: text("task_type_id")
+  categoryId: text("category_id")
     .notNull()
-    .references(() => taskTypes.id),
+    .references(() => categories.id),
+  name: text("name"),
   date: text("date").notNull(),
+  plannedStartAt: timestamp("planned_start_at", { mode: "date" }),
+  plannedDurationMinutes: integer("planned_duration_minutes"),
   startedAt: timestamp("started_at", { mode: "date" }).notNull(),
   endedAt: timestamp("ended_at", { mode: "date" }),
   durationMinutes: integer("duration_minutes"),
@@ -84,13 +87,13 @@ export const timeEntries = pgTable("time_entries", {
 export const usersRelations = relations(users, ({ many }) => ({
   accounts: many(accounts),
   sessions: many(sessions),
-  taskTypes: many(taskTypes),
+  categories: many(categories),
   timeEntries: many(timeEntries),
 }));
 
-export const taskTypesRelations = relations(taskTypes, ({ one, many }) => ({
+export const categoriesRelations = relations(categories, ({ one, many }) => ({
   user: one(users, {
-    fields: [taskTypes.userId],
+    fields: [categories.userId],
     references: [users.id],
   }),
   timeEntries: many(timeEntries),
@@ -101,20 +104,20 @@ export const timeEntriesRelations = relations(timeEntries, ({ one }) => ({
     fields: [timeEntries.userId],
     references: [users.id],
   }),
-  taskType: one(taskTypes, {
-    fields: [timeEntries.taskTypeId],
-    references: [taskTypes.id],
+  category: one(categories, {
+    fields: [timeEntries.categoryId],
+    references: [categories.id],
   }),
 }));
 
 // 型エクスポート
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
-export type TaskType = typeof taskTypes.$inferSelect;
-export type NewTaskType = typeof taskTypes.$inferInsert;
+export type Category = typeof categories.$inferSelect;
+export type NewCategory = typeof categories.$inferInsert;
 export type TimeEntry = typeof timeEntries.$inferSelect;
 export type NewTimeEntry = typeof timeEntries.$inferInsert;
 
-export type TimeEntryWithTaskType = TimeEntry & {
-  taskType: TaskType;
+export type TimeEntryWithCategory = TimeEntry & {
+  category: Category;
 };
