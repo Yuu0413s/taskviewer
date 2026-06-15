@@ -17,7 +17,7 @@ export async function PATCH(
   try {
     const { id } = await params;
     const body = await request.json();
-    const { status, memo } = body;
+    const { status, memo, deviationFocused, deviationReason } = body;
 
     // 既存の記録を取得
     const entry = await db.query.timeEntries.findFirst({
@@ -40,6 +40,14 @@ export async function PATCH(
 
     if (memo !== undefined) {
       updateData.memo = memo;
+    }
+
+    if (deviationFocused !== undefined) {
+      updateData.deviationFocused = deviationFocused;
+    }
+
+    if (deviationReason !== undefined) {
+      updateData.deviationReason = deviationReason;
     }
 
     if (status) {

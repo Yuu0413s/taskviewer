@@ -5,7 +5,7 @@ import { useState } from "react";
 interface TimeDeviationModalProps {
   plannedMinutes: number;
   actualMinutes: number;
-  onSubmit: (reason: string | null) => void;
+  onSubmit: (focused: boolean, reason: string) => void;
 }
 
 export function TimeDeviationModal({
@@ -18,16 +18,13 @@ export function TimeDeviationModal({
 
   const diff = actualMinutes - plannedMinutes;
   const diffAbs = Math.abs(diff);
-  const diffLabel =
-    diff > 0 ? `${diffAbs}分 超過` : `${diffAbs}分 短縮`;
+  const diffLabel = diff > 0 ? `${diffAbs}分 超過` : `${diffAbs}分 短縮`;
+
+  const canSubmit = focused !== null && reason.trim().length > 0;
 
   const handleSubmit = () => {
-    if (focused === null) return;
-    if (focused) {
-      onSubmit(null);
-    } else {
-      onSubmit(reason.trim() || null);
-    }
+    if (!canSubmit || focused === null) return;
+    onSubmit(focused, reason.trim());
   };
 
   return (
@@ -66,15 +63,19 @@ export function TimeDeviationModal({
           </button>
         </div>
 
-        {focused === false && (
+        {focused !== null && (
           <div className="mb-5">
             <label className="mb-1 block text-sm font-medium text-gray-700">
-              理由（任意）
+              理由<span className="ml-1 text-red-500">*</span>
             </label>
             <textarea
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              placeholder="例：会議が入った、調べ物が増えた..."
+              placeholder={
+                focused
+                  ? "例：タスクの見通しが良かった、集中できる環境だった..."
+                  : "例：会議が入った、調べ物が増えた..."
+              }
               rows={3}
               className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none resize-none"
             />
@@ -83,7 +84,7 @@ export function TimeDeviationModal({
 
         <button
           onClick={handleSubmit}
-          disabled={focused === null}
+          disabled={!canSubmit}
           className="w-full rounded-lg bg-blue-600 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-40"
         >
           記録して終了

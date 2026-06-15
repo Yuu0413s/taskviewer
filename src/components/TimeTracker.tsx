@@ -128,13 +128,16 @@ export function TimeTracker() {
     }
   };
 
-  const completeEntry = async (memo: string | null) => {
+  const completeEntry = async (opts?: { focused: boolean; reason: string }) => {
     if (!currentEntry) return;
 
     setLoading(true);
     try {
       const body: Record<string, unknown> = { status: "completed" };
-      if (memo !== null) body.memo = memo;
+      if (opts) {
+        body.deviationFocused = opts.focused;
+        body.deviationReason = opts.reason;
+      }
 
       const res = await fetch(`/api/time-entries/${currentEntry.id}`, {
         method: "PATCH",
@@ -179,12 +182,12 @@ export function TimeTracker() {
       }
     }
 
-    completeEntry(null);
+    completeEntry();
   };
 
-  const handleDeviationSubmit = (reason: string | null) => {
+  const handleDeviationSubmit = (focused: boolean, reason: string) => {
     setDeviationModal(null);
-    completeEntry(reason);
+    completeEntry({ focused, reason });
   };
 
   if (initialLoading) {

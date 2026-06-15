@@ -80,6 +80,8 @@ export const timeEntries = pgTable("time_entries", {
     .notNull()
     .default("working"),
   memo: text("memo"),
+  deviationFocused: boolean("deviation_focused"),
+  deviationReason: text("deviation_reason"),
   createdAt: timestamp("created_at", { mode: "date" }).$defaultFn(() => new Date()),
   updatedAt: timestamp("updated_at", { mode: "date" }).$defaultFn(() => new Date()),
 });
