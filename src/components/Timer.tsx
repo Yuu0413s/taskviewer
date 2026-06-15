@@ -5,9 +5,10 @@ import { useState, useEffect } from "react";
 interface TimerProps {
   startedAt: Date | null;
   status: "idle" | "working" | "on_break" | "completed";
+  totalBreakSeconds: number;
 }
 
-export function Timer({ startedAt, status }: TimerProps) {
+export function Timer({ startedAt, status, totalBreakSeconds }: TimerProps) {
   const [elapsed, setElapsed] = useState(0);
 
   useEffect(() => {
@@ -16,9 +17,11 @@ export function Timer({ startedAt, status }: TimerProps) {
       return;
     }
 
-    // 初期値を設定
     const start = new Date(startedAt).getTime();
-    setElapsed(Math.floor((Date.now() - start) / 1000));
+    const calcElapsed = () =>
+      Math.max(0, Math.floor((Date.now() - start) / 1000) - totalBreakSeconds);
+
+    setElapsed(calcElapsed());
 
     // 作業中のみカウントアップ
     if (status !== "working") {
@@ -26,11 +29,11 @@ export function Timer({ startedAt, status }: TimerProps) {
     }
 
     const interval = setInterval(() => {
-      setElapsed(Math.floor((Date.now() - start) / 1000));
+      setElapsed(calcElapsed());
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [startedAt, status]);
+  }, [startedAt, status, totalBreakSeconds]);
 
   const formatTime = (seconds: number) => {
     const h = Math.floor(seconds / 3600);

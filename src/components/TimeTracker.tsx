@@ -162,6 +162,7 @@ export function TimeTracker() {
           <Timer
             startedAt={currentEntry?.startedAt || null}
             status={status}
+            totalBreakSeconds={currentEntry?.totalBreakSeconds ?? 0}
           />
 
           {status === "idle" ? (

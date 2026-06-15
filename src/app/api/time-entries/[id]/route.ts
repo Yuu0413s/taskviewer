@@ -45,15 +45,36 @@ export async function PATCH(
     if (status) {
       updateData.status = status;
 
-      // 終了時の処理
-      if (status === "completed") {
+      if (status === "on_break") {
+        updateData.breakStartedAt = new Date();
+      } else if (status === "working") {
+        // 休憩再開: 今回の休憩時間を累積に加算して breakStartedAt をリセット
+        if (entry.breakStartedAt) {
+          const breakDuration = Math.round(
+            (Date.now() - new Date(entry.breakStartedAt).getTime()) / 1000
+          );
+          updateData.totalBreakSeconds = (entry.totalBreakSeconds ?? 0) + breakDuration;
+          updateData.breakStartedAt = null;
+        }
+      } else if (status === "completed") {
         const now = new Date();
         updateData.endedAt = now;
 
-        // 作業時間を計算（分単位）
-        const startTime = new Date(entry.startedAt).getTime();
-        const endTime = now.getTime();
-        updateData.durationMinutes = Math.round((endTime - startTime) / 60000);
+        // 休憩中に終了した場合も含め累積休憩秒数を確定
+        let totalBreakSec = entry.totalBreakSeconds ?? 0;
+        if (entry.breakStartedAt) {
+          totalBreakSec += Math.round(
+            (now.getTime() - new Date(entry.breakStartedAt).getTime()) / 1000
+          );
+          updateData.breakStartedAt = null;
+        }
+        updateData.totalBreakSeconds = totalBreakSec;
+
+        // 実作業時間を計算（休憩時間を除く）
+        const totalSeconds = Math.round(
+          (now.getTime() - new Date(entry.startedAt).getTime()) / 1000
+        );
+        updateData.durationMinutes = Math.round((totalSeconds - totalBreakSec) / 60);
       }
     }
 

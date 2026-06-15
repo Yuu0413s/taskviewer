@@ -8,6 +8,13 @@
       "when": 1781485449276,
       "tag": "0000_special_kronos",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1781544351974,
+      "tag": "0001_gorgeous_quicksilver",
+      "breakpoints": true
     }
   ]
 }

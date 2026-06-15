@@ -74,6 +74,8 @@ export const timeEntries = pgTable("time_entries", {
   startedAt: timestamp("started_at", { mode: "date" }).notNull(),
   endedAt: timestamp("ended_at", { mode: "date" }),
   durationMinutes: integer("duration_minutes"),
+  breakStartedAt: timestamp("break_started_at", { mode: "date" }),
+  totalBreakSeconds: integer("total_break_seconds").notNull().default(0),
   status: text("status", { enum: ["working", "on_break", "completed"] })
     .notNull()
     .default("working"),
