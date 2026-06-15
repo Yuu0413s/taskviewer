@@ -44,11 +44,7 @@ export function TimeTracker() {
   };
 
   const handleStart = async () => {
-    console.log("[handleStart] selectedCategory:", selectedCategory);
-    if (!selectedCategory) {
-      setError("カテゴリが選択されていません");
-      return;
-    }
+    if (!selectedCategory) return;
 
     setError(null);
     setLoading(true);
@@ -59,19 +55,14 @@ export function TimeTracker() {
         body: JSON.stringify({ categoryId: selectedCategory }),
       });
 
-      console.log("[handleStart] response status:", res.status);
-
       if (res.ok) {
         const data = await res.json();
-        console.log("[handleStart] response data:", data);
         setCurrentEntry(data);
       } else {
         const errBody = await res.text();
-        console.error("[handleStart] error body:", errBody);
         setError(`エラー (${res.status}): ${errBody}`);
       }
     } catch (error) {
-      console.error("[handleStart] fetch error:", error);
       setError(`通信エラー: ${String(error)}`);
     } finally {
       setLoading(false);
