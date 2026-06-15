@@ -15,6 +15,7 @@ export function TimeTracker() {
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchCurrentEntry = useCallback(async () => {
     try {
@@ -43,8 +44,13 @@ export function TimeTracker() {
   };
 
   const handleStart = async () => {
-    if (!selectedCategory) return;
+    console.log("[handleStart] selectedCategory:", selectedCategory);
+    if (!selectedCategory) {
+      setError("カテゴリが選択されていません");
+      return;
+    }
 
+    setError(null);
     setLoading(true);
     try {
       const res = await fetch("/api/time-entries", {
@@ -53,12 +59,20 @@ export function TimeTracker() {
         body: JSON.stringify({ categoryId: selectedCategory }),
       });
 
+      console.log("[handleStart] response status:", res.status);
+
       if (res.ok) {
         const data = await res.json();
+        console.log("[handleStart] response data:", data);
         setCurrentEntry(data);
+      } else {
+        const errBody = await res.text();
+        console.error("[handleStart] error body:", errBody);
+        setError(`エラー (${res.status}): ${errBody}`);
       }
     } catch (error) {
-      console.error("Failed to start:", error);
+      console.error("[handleStart] fetch error:", error);
+      setError(`通信エラー: ${String(error)}`);
     } finally {
       setLoading(false);
     }
@@ -165,6 +179,10 @@ export function TimeTracker() {
             onEnd={handleEnd}
             loading={loading}
           />
+
+          {error && (
+            <p className="text-center text-sm text-red-600">{error}</p>
+          )}
         </div>
       </div>
 
