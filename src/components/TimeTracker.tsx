@@ -12,6 +12,9 @@ type Status = "idle" | "working" | "on_break" | "completed";
 export function TimeTracker() {
   const [currentEntry, setCurrentEntry] = useState<TimeEntryWithCategory | null>(null);
   const [selectedCategory, setSelectedCategory] = useState("");
+  const [taskName, setTaskName] = useState("");
+  const [plannedStartAt, setPlannedStartAt] = useState("");
+  const [plannedDurationMinutes, setPlannedDurationMinutes] = useState("");
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
@@ -49,15 +52,28 @@ export function TimeTracker() {
     setError(null);
     setLoading(true);
     try {
+      const body: Record<string, unknown> = { categoryId: selectedCategory };
+      if (taskName.trim()) body.name = taskName.trim();
+      if (plannedStartAt) {
+        const today = new Date().toISOString().split("T")[0];
+        body.plannedStartAt = new Date(`${today}T${plannedStartAt}:00`).toISOString();
+      }
+      if (plannedDurationMinutes) {
+        body.plannedDurationMinutes = parseInt(plannedDurationMinutes, 10);
+      }
+
       const res = await fetch("/api/time-entries", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ categoryId: selectedCategory }),
+        body: JSON.stringify(body),
       });
 
       if (res.ok) {
         const data = await res.json();
         setCurrentEntry(data);
+        setTaskName("");
+        setPlannedStartAt("");
+        setPlannedDurationMinutes("");
       } else {
         const errBody = await res.text();
         setError(`エラー (${res.status}): ${errBody}`);
@@ -148,19 +164,78 @@ export function TimeTracker() {
   return (
     <div className="space-y-8">
       <div className="rounded-lg border border-gray-200 bg-white p-8">
-        <div className="space-y-8">
+        <div className="space-y-6">
           <Timer
             startedAt={currentEntry?.startedAt || null}
             status={status}
           />
 
-          <div className="mx-auto max-w-xs">
-            <TaskTypeSelector
-              value={selectedCategory}
-              onChange={setSelectedCategory}
-              disabled={status !== "idle"}
-            />
-          </div>
+          {status === "idle" ? (
+            <div className="mx-auto max-w-xs space-y-3">
+              <div>
+                <label className="mb-1 block text-xs font-medium text-gray-600">
+                  タスク名
+                </label>
+                <input
+                  type="text"
+                  value={taskName}
+                  onChange={(e) => setTaskName(e.target.value)}
+                  placeholder="例：週次レポート作成"
+                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-medium text-gray-600">
+                  カテゴリ
+                </label>
+                <TaskTypeSelector
+                  value={selectedCategory}
+                  onChange={setSelectedCategory}
+                  disabled={false}
+                />
+              </div>
+              <div className="flex gap-3">
+                <div className="flex-1">
+                  <label className="mb-1 block text-xs font-medium text-gray-600">
+                    計画開始時刻
+                  </label>
+                  <input
+                    type="time"
+                    value={plannedStartAt}
+                    onChange={(e) => setPlannedStartAt(e.target.value)}
+                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                  />
+                </div>
+                <div className="flex-1">
+                  <label className="mb-1 block text-xs font-medium text-gray-600">
+                    計画時間（分）
+                  </label>
+                  <input
+                    type="number"
+                    value={plannedDurationMinutes}
+                    onChange={(e) => setPlannedDurationMinutes(e.target.value)}
+                    placeholder="60"
+                    min="1"
+                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                  />
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center space-y-1">
+              {currentEntry?.name && (
+                <p className="font-medium text-gray-900">{currentEntry.name}</p>
+              )}
+              <p className="text-sm text-gray-500">
+                {currentEntry?.category?.name}
+              </p>
+              {currentEntry?.plannedDurationMinutes && (
+                <p className="text-xs text-gray-400">
+                  計画: {currentEntry.plannedDurationMinutes}分
+                </p>
+              )}
+            </div>
+          )}
 
           <ControlButtons
             status={status}
