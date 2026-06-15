@@ -5,6 +5,7 @@ import { Timer } from "./Timer";
 import { ControlButtons } from "./ControlButtons";
 import { TaskTypeSelector } from "./TaskTypeSelector";
 import { TodaySummary } from "./TodaySummary";
+import { TimeDeviationModal } from "./TimeDeviationModal";
 import { TimeEntryWithCategory } from "@/lib/db/schema";
 
 type Status = "idle" | "working" | "on_break" | "completed";
@@ -18,6 +19,10 @@ export function TimeTracker() {
   const [initialLoading, setInitialLoading] = useState(true);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [deviationModal, setDeviationModal] = useState<{
+    plannedMinutes: number;
+    actualMinutes: number;
+  } | null>(null);
 
   const fetchCurrentEntry = useCallback(async () => {
     try {
@@ -123,15 +128,18 @@ export function TimeTracker() {
     }
   };
 
-  const handleEnd = async () => {
+  const completeEntry = async (memo: string | null) => {
     if (!currentEntry) return;
 
     setLoading(true);
     try {
+      const body: Record<string, unknown> = { status: "completed" };
+      if (memo !== null) body.memo = memo;
+
       const res = await fetch(`/api/time-entries/${currentEntry.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: "completed" }),
+        body: JSON.stringify(body),
       });
 
       if (res.ok) {
@@ -143,6 +151,40 @@ export function TimeTracker() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleEnd = () => {
+    if (!currentEntry) return;
+
+    if (currentEntry.plannedDurationMinutes) {
+      const nowMs = Date.now();
+      const startMs = new Date(currentEntry.startedAt).getTime();
+      let breakSec = currentEntry.totalBreakSeconds ?? 0;
+      if (currentEntry.breakStartedAt) {
+        breakSec += Math.round(
+          (nowMs - new Date(currentEntry.breakStartedAt).getTime()) / 1000
+        );
+      }
+      const actualMinutes = Math.round(
+        (nowMs - startMs) / 1000 / 60 - breakSec / 60
+      );
+      const diff = Math.abs(actualMinutes - currentEntry.plannedDurationMinutes);
+
+      if (diff >= 10) {
+        setDeviationModal({
+          plannedMinutes: currentEntry.plannedDurationMinutes,
+          actualMinutes,
+        });
+        return;
+      }
+    }
+
+    completeEntry(null);
+  };
+
+  const handleDeviationSubmit = (reason: string | null) => {
+    setDeviationModal(null);
+    completeEntry(reason);
   };
 
   if (initialLoading) {
@@ -235,6 +277,14 @@ export function TimeTracker() {
       </div>
 
       <TodaySummary refreshTrigger={refreshTrigger} />
+
+      {deviationModal && (
+        <TimeDeviationModal
+          plannedMinutes={deviationModal.plannedMinutes}
+          actualMinutes={deviationModal.actualMinutes}
+          onSubmit={handleDeviationSubmit}
+        />
+      )}
     </div>
   );
 }
