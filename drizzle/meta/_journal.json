@@ -15,6 +15,13 @@
       "when": 1781544351974,
       "tag": "0001_gorgeous_quicksilver",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1785154212602,
+      "tag": "0002_mature_swordsman",
+      "breakpoints": true
     }
   ]
 }
