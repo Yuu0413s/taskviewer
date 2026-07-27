@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useLayoutEffect, useState } from "react";
 
 interface TimerProps {
   startedAt: Date | null;
@@ -16,10 +16,15 @@ export function Timer({ startedAt, status, totalBreakSeconds }: TimerProps) {
   // state に持つのは「現在時刻」だけ。経過秒は毎レンダーで計算する（導出状態）。
   // Date.now() はレンダー中に直接呼べない（react-hooks/purity）ので、
   // setState は必ず「effectのコールバック（interval / cleanup）の中」でのみ呼ぶ。
+  //
+  // useEffect ではなく useLayoutEffect を使っているのは、useEffect（passive effect）は
+  // ブラウザが描画した後に実行されるため、on_break <-> working の切り替わり時に
+  // 「古い now のまま1フレームだけ描画される」瞬間が理論上発生するため。
+  // useLayoutEffect は描画前に同期実行されるので、この1フレームのズレ自体を無くせる。
   const [now, setNow] = useState<number>(() => Date.now());
 
   // 実行中: interval で1秒ごとに更新し、停止した瞬間（cleanup）に最後の値を合わせる。
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!isRunning) return;
     const id = setInterval(() => setNow(Date.now()), 1000);
     return () => {
@@ -33,7 +38,7 @@ export function Timer({ startedAt, status, totalBreakSeconds }: TimerProps) {
   // 停止中: 何もしないが、再開した瞬間（cleanup）に now を合わせる。
   // これが無いと working へ復帰した瞬間、更新済みの totalBreakSeconds を
   // 休憩開始時刻のままの古い now から差し引いてしまい、一時的に表示が減って見える。
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (isRunning) return;
     return () => {
       setNow(Date.now());
