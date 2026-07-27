@@ -1,0 +1,86 @@
+name: CI
+
+permissions:
+  contents: read
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+# 同じブランチに連続でpushした時、古い実行を自動キャンセルして節約する
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+# ダミー値。本物のDBには一切接続しません。
+# next build / drizzle-kit が「環境変数が無い」で落ちるのを防ぐためだけに置いています。
+env:
+  POSTGRES_URL: postgresql://dummy:dummy@dummy.neon.tech/dummy?sslmode=require
+  AUTH_SECRET: ci-dummy-secret-do-not-use-in-production
+  NEXTAUTH_SECRET: ci-dummy-secret-do-not-use-in-production
+  NEXTAUTH_URL: http://localhost:3000
+
+jobs:
+  quality:
+    name: Lint / Typecheck / Test / Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      # テストがまだ無いうちは --if-present でスキップされる（落ちない）
+      - name: Test
+        run: npm run test --if-present
+
+      - name: Build
+        run: npm run build
+
+  db-check:
+    name: Drizzle schema / migration drift
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # schema.ts から SQL を生成し直して、差分が出ないことを確認する
+      - name: Generate migrations from schema
+        run: npx drizzle-kit generate
+
+      - name: Fail if migrations are out of sync
+        run: |
+          if [ -n "$(git status --porcelain drizzle/)" ]; then
+            echo "::error::schema.ts の変更が drizzle/ に反映されていません。ローカルで 'npm run db:generate' を実行し、生成されたファイルをコミットしてください。"
+            git status --porcelain drizzle/
+            exit 1
+          fi
+          echo "✅ schema.ts と drizzle/ は同期しています"

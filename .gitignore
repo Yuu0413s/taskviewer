@@ -22,7 +22,12 @@
 
 # misc
 .DS_Store
+
+# 秘密鍵類（誤コミット防止）
 *.pem
+*.key
+*.p8
+*.p12
 
 # debug
 npm-debug.log*
@@ -32,6 +37,7 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
 
 # vercel
 .vercel
@@ -40,3 +46,10 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 .env*.local
+
+# local sqlite (開発用の一時DB。リポジトリに含めない)
+local.db
+
+# PR解説HTML・学習ログ（pr-submit / learning-log スキルの出力。ローカル専用でpushしない）
+docs/pr/
+docs/learning/
