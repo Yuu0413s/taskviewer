@@ -22,7 +22,12 @@
 
 # misc
 .DS_Store
+
+# 秘密鍵類（誤コミット防止）
 *.pem
+*.key
+*.p8
+*.p12
 
 # debug
 npm-debug.log*
