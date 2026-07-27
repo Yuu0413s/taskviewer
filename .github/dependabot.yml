@@ -10,6 +10,10 @@ updates:
     open-pull-requests-limit: 5
     commit-message:
       prefix: "chore(deps)"
+    # dotenv: 17.x系にAIエージェント向けプロンプトインジェクションを含む
+    # バージョンが確認されているため、自動更新の対象から外し手動レビューを必須にする
+    ignore:
+      - dependency-name: "dotenv"
     # 関連パッケージをまとめて1つのPRにする（PRが乱立するのを防ぐ）
     groups:
       react:
