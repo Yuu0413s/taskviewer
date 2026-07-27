@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 
 interface TimerProps {
   startedAt: Date | null;
@@ -9,31 +9,29 @@ interface TimerProps {
 }
 
 export function Timer({ startedAt, status, totalBreakSeconds }: TimerProps) {
-  const [elapsed, setElapsed] = useState(0);
+  const isActive =
+    Boolean(startedAt) && status !== "idle" && status !== "completed";
+  const isRunning = isActive && status === "working";
+
+  // state に持つのは「現在時刻」だけ。経過秒は毎レンダーで計算する（導出状態）。
+  // こうすると setElapsed() を effect の本体で呼ぶ必要がなくなり、
+  // react-hooks/set-state-in-effect のエラーが解消される。
+  const [now, setNow] = useState<number>(() => Date.now());
 
   useEffect(() => {
-    if (!startedAt || status === "idle" || status === "completed") {
-      setElapsed(0);
-      return;
-    }
+    if (!isRunning) return;
+    // setState は effect の本体ではなく、コールバックの中で呼ぶのがルール
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, [isRunning]);
 
+  // setInterval のカウントを積み上げず、毎回 Date.now() との差分を取り直す。
+  // これによりタブがバックグラウンドに回って間引かれてもズレない。
+  const elapsed = (() => {
+    if (!startedAt || !isActive) return 0;
     const start = new Date(startedAt).getTime();
-    const calcElapsed = () =>
-      Math.max(0, Math.floor((Date.now() - start) / 1000) - totalBreakSeconds);
-
-    setElapsed(calcElapsed());
-
-    // 作業中のみカウントアップ
-    if (status !== "working") {
-      return;
-    }
-
-    const interval = setInterval(() => {
-      setElapsed(calcElapsed());
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [startedAt, status, totalBreakSeconds]);
+    return Math.max(0, Math.floor((now - start) / 1000) - totalBreakSeconds);
+  })();
 
   const formatTime = (seconds: number) => {
     const h = Math.floor(seconds / 3600);
@@ -70,10 +68,11 @@ export function Timer({ startedAt, status, totalBreakSeconds }: TimerProps) {
 
   return (
     <div className="text-center">
-      <div className="text-6xl font-mono font-bold text-gray-900">
+      {/* スマホでは 6xl だと桁があふれるので段階的に大きくする */}
+      <div className="font-mono text-4xl font-bold tabular-nums text-gray-900 sm:text-5xl md:text-6xl">
         {formatTime(elapsed)}
       </div>
-      <div className={`mt-2 text-lg font-medium ${getStatusColor()}`}>
+      <div className={`mt-2 text-base font-medium sm:text-lg ${getStatusColor()}`}>
         {getStatusText()}
       </div>
     </div>
