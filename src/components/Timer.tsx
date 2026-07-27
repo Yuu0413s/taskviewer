@@ -22,7 +22,13 @@ export function Timer({ startedAt, status, totalBreakSeconds }: TimerProps) {
     if (!isRunning) return;
     // setState は effect の本体ではなく、コールバックの中で呼ぶのがルール
     const id = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(id);
+    return () => {
+      clearInterval(id);
+      // isRunning が false に切り替わった瞬間の時刻に合わせる。
+      // これが無いと on_break への切替時、直前の interval tick の時刻のまま
+      // 最大1秒表示が止まって見える。
+      setNow(Date.now());
+    };
   }, [isRunning]);
 
   // setInterval のカウントを積み上げず、毎回 Date.now() との差分を取り直す。
