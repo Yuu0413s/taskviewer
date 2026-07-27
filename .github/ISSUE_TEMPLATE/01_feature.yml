@@ -29,9 +29,9 @@ body:
       label: 受け入れ条件（Acceptance Criteria）
       description: "「これが全部できたら完了」と言える条件をチェックリストで書く。ここが曖昧なままだと実装が終わりません。"
       value: |
-        - [ ] 
-        - [ ] 
-        - [ ] 
+        - [ ]
+        - [ ]
+        - [ ]
     validations:
       required: true
 

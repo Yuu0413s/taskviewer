@@ -38,7 +38,7 @@ body:
     attributes:
       label: 完了条件
       value: |
-        - [ ] 
-        - [ ] 
+        - [ ]
+        - [ ]
     validations:
       required: true

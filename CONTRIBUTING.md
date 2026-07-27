@@ -113,6 +113,8 @@ npm run dev
 | `POSTGRES_URL` | Neon の接続文字列 | ✅ |
 | `AUTH_SECRET` | Auth.js のセッション署名用（`npx auth secret` で生成） | ✅ |
 | `NEXTAUTH_URL` | 本番URL（Vercelでは自動設定される場合あり） | ✅ |
+| `AUTH_GOOGLE_ID` | Googleログイン用クライアントID（Google Cloud Console） | ✅ |
+| `AUTH_GOOGLE_SECRET` | Googleログイン用クライアントシークレット | ✅ |
 | `VAPID_PUBLIC_KEY` | Web Push 公開鍵（`npx web-push generate-vapid-keys`） | Push実装後 |
 | `VAPID_PRIVATE_KEY` | Web Push 秘密鍵 | Push実装後 |
 | `CRON_SECRET` | cron エンドポイントの認証用 | Push実装後 |
