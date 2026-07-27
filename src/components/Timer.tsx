@@ -14,25 +14,32 @@ export function Timer({ startedAt, status, totalBreakSeconds }: TimerProps) {
   const isRunning = isActive && status === "working";
 
   // state に持つのは「現在時刻」だけ。経過秒は毎レンダーで計算する（導出状態）。
-  // こうすると setElapsed() を effect の本体で呼ぶ必要がなくなり、
-  // react-hooks/set-state-in-effect のエラーが解消される。
+  // Date.now() はレンダー中に直接呼べない（react-hooks/purity）ので、
+  // setState は必ず「effectのコールバック（interval / cleanup）の中」でのみ呼ぶ。
   const [now, setNow] = useState<number>(() => Date.now());
 
+  // 実行中: interval で1秒ごとに更新し、停止した瞬間（cleanup）に最後の値を合わせる。
   useEffect(() => {
     if (!isRunning) return;
-    // setState は effect の本体ではなく、コールバックの中で呼ぶのがルール
     const id = setInterval(() => setNow(Date.now()), 1000);
     return () => {
       clearInterval(id);
-      // isRunning が false に切り替わった瞬間の時刻に合わせる。
-      // これが無いと on_break への切替時、直前の interval tick の時刻のまま
-      // 最大1秒表示が止まって見える。
+      // on_break へ切り替わった瞬間の時刻に合わせる。
+      // これが無いと直前の interval tick の時刻のまま最大1秒表示が止まって見える。
       setNow(Date.now());
     };
   }, [isRunning]);
 
-  // setInterval のカウントを積み上げず、毎回 Date.now() との差分を取り直す。
-  // これによりタブがバックグラウンドに回って間引かれてもズレない。
+  // 停止中: 何もしないが、再開した瞬間（cleanup）に now を合わせる。
+  // これが無いと working へ復帰した瞬間、更新済みの totalBreakSeconds を
+  // 休憩開始時刻のままの古い now から差し引いてしまい、一時的に表示が減って見える。
+  useEffect(() => {
+    if (isRunning) return;
+    return () => {
+      setNow(Date.now());
+    };
+  }, [isRunning]);
+
   const elapsed = (() => {
     if (!startedAt || !isActive) return 0;
     const start = new Date(startedAt).getTime();
