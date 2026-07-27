@@ -44,3 +44,7 @@ next-env.d.ts
 
 # local sqlite (開発用の一時DB。リポジトリに含めない)
 local.db
+
+# PR解説HTML・学習ログ（pr-submit / learning-log スキルの出力。ローカル専用でpushしない）
+docs/pr/
+docs/learning/
